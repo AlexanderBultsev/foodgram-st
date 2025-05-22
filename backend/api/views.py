@@ -29,6 +29,7 @@ def redirect_short_link(request, code):
     recipe = get_object_or_404(Recipe, id=recipe_id)
     return redirect(f'/recipes/{recipe.id}/')
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     pagination_class = RecipePagination
@@ -38,7 +39,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return UserCreateSerializer
         return UserSerializer
-    
+
     @action(detail=False, permission_classes=[IsAuthenticated])
     def me(self, request):
         serializer = UserSerializer(request.user, context={'request': request})
@@ -65,13 +66,13 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     @avatar.mapping.delete
     def delete_avatar(self, request):
         user = request.user
         user.avatar.delete(save=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def set_password(self, request):
         user = request.user
@@ -96,21 +97,22 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SubscriptionSerializer(page, many=True,
                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
-    
+
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk=None):
         author = get_object_or_404(User, pk=pk)
         user = request.user
-        
-        if (user == author or
-            Subscription.objects.filter(user=user, author=author).exists()):
+
+        if (user == author
+                or Subscription.objects.filter(user=user, author=author).exists()):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
         subscription = Subscription.objects.create(user=user, author=author)
-        serializer = SubscriptionSerializer(subscription.author, context={'request': request})
+        serializer = SubscriptionSerializer(
+            subscription.author, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     @subscribe.mapping.delete
     def delete_subscribe(self, request, pk=None):
         user = request.user
@@ -119,7 +121,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if Subscription.objects.filter(user=user, author=author).exists():
             Subscription.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -134,7 +136,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
         if name:
             queryset = queryset.filter(name__istartswith=name)
         return queryset
-    
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
@@ -154,11 +156,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         if Favorite.objects.filter(user=user, recipe=recipe).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
         Favorite.objects.create(user=user, recipe=recipe)
         serializer = ShortRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
         user = request.user
@@ -167,7 +169,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if Favorite.objects.filter(user=user, recipe=recipe).exists():
             Favorite.objects.filter(user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -177,7 +179,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if Cart.objects.filter(user=user, recipe=recipe).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
         Cart.objects.create(user=user, recipe=recipe)
         serializer = ShortRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -190,7 +192,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if Cart.objects.filter(user=user, recipe=recipe).exists():
             Cart.objects.filter(user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, permission_classes=[IsAuthenticated])

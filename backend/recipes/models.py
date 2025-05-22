@@ -2,6 +2,7 @@ from django.db import models
 from django.core import validators
 from users.models import User
 
+
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=255,
@@ -63,7 +64,7 @@ class Recipe(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-    
+
     def __str__(self):
         return self.name
 
@@ -95,7 +96,7 @@ class RecipeIngredient(models.Model):
         ]
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
-    
+
     def __str__(self):
         return f'{self.recipe} - {self.ingredient} - {self.amount}'
 
@@ -104,7 +105,7 @@ class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name = 'favorites',
+        related_name='favorites',
         verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
@@ -123,7 +124,7 @@ class Favorite(models.Model):
         ]
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-    
+
     def __str__(self):
         return f'{self.user} - {self.recipe}'
 
@@ -151,8 +152,6 @@ class Cart(models.Model):
         ]
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
-    
+
     def __str__(self):
         return f'{self.user} - {self.recipe}'
-
-

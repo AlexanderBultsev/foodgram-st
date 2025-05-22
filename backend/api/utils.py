@@ -19,7 +19,8 @@ def decode_recipe_code(code: str) -> int:
 
 
 def shopping_cart(user):
-    recipe_ids = Cart.objects.filter(user=user).values_list('recipe_id', flat=True)
+    recipe_ids = Cart.objects.filter(
+        user=user).values_list('recipe_id', flat=True)
 
     sum_ingredient = RecipeIngredient.objects.filter(
         recipe__in=recipe_ids

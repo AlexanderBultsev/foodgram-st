@@ -5,8 +5,8 @@ from django.db import models
 
 class User(AbstractUser):
     username_validator = validators.RegexValidator(
-        regex = r'^[\w.@+-]+\Z',
-        message = (
+        regex=r'^[\w.@+-]+\Z',
+        message=(
             'Логин модет содержать только буквы, '
             'цифры, и знаки @/./+/-/_.'
         )
@@ -57,7 +57,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-    
+
     def __str__(self):
         return self.username
 
@@ -85,6 +85,6 @@ class Subscription(models.Model):
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-    
+
     def __str__(self):
         return f'{self.user} подписан на {self.author}'
