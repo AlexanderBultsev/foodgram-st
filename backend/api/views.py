@@ -27,7 +27,7 @@ from .utils import encode_recipe_id, decode_recipe_code, shopping_cart
 def redirect_short_link(request, code):
     recipe_id = decode_recipe_code(code)
     recipe = get_object_or_404(Recipe, id=recipe_id)
-    return redirect(f'/recipes/{recipe.id}/')
+    return redirect(f'http://{request.get_host()}/recipes/{recipe.id}/')
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -45,7 +45,8 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated],
+    @action(detail=False, methods=['put'],
+            permission_classes=[IsAuthenticated],
             url_path='me/avatar')
     def avatar(self, request):
         user = request.user
@@ -73,7 +74,8 @@ class UserViewSet(viewsets.ModelViewSet):
         user.avatar.delete(save=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['post'],
+            permission_classes=[IsAuthenticated])
     def set_password(self, request):
         user = request.user
         serializer = SetPasswordSerializer(
@@ -104,8 +106,8 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, pk=pk)
         user = request.user
 
-        if (user == author
-                or Subscription.objects.filter(user=user, author=author).exists()):
+        if (user == author or Subscription.objects.filter(
+                user=user, author=author).exists()):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         subscription = Subscription.objects.create(user=user, author=author)
@@ -150,7 +152,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeSerializer
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'],
+            permission_classes=[IsAuthenticated])
     def favorite(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -172,7 +175,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'],
+            permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -203,7 +207,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, permission_classes=[AllowAny],
             url_path='get-link')
     def get_link(self, request, pk=None):
-        short_code = encode_recipe_id(pk)
+        short_code = encode_recipe_id(int(pk))
         return Response({
             'short-link': request.build_absolute_uri(f'/s/{short_code}/')
         })

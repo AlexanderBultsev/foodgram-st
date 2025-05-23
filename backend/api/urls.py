@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, IngredientViewSet, RecipeViewSet, redirect_short_link
+from .views import (
+    UserViewSet, IngredientViewSet, RecipeViewSet, redirect_short_link
+)
 
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
