@@ -6,7 +6,7 @@
 
 1. **Клонируйте репозиторий:**
     ```bash
-    git clone https://github.com/your-username/foodgram-st.git
+    git clone https://github.com/AlexanderBultsev/foodgram-st.git
     cd foodgram-st
     ```
 
