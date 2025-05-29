@@ -2,6 +2,9 @@ from django.db import models
 from django.core import validators
 from users.models import User
 
+MIN_POSITIVE_VALUE = 1
+MAX_POSITIVE_VALUE = 32000
+
 
 class Ingredient(models.Model):
     name = models.CharField(
@@ -52,7 +55,10 @@ class Recipe(models.Model):
         verbose_name='Описание'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=[validators.MinValueValidator(1)],
+        validators=[
+            validators.MinValueValidator(MIN_POSITIVE_VALUE),
+            validators.MaxValueValidator(MAX_POSITIVE_VALUE)
+        ],
         verbose_name='Время приготовления (в минутах)'
     )
     created_at = models.DateTimeField(
@@ -83,11 +89,15 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент'
     )
     amount = models.PositiveSmallIntegerField(
-        validators=[validators.MinValueValidator(1)],
+        validators=[
+            validators.MinValueValidator(MIN_POSITIVE_VALUE),
+            validators.MaxValueValidator(MAX_POSITIVE_VALUE)
+        ],
         verbose_name='Количество'
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
@@ -116,6 +126,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
@@ -144,6 +155,7 @@ class Cart(models.Model):
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],

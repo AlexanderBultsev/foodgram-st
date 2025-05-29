@@ -16,7 +16,8 @@ from .serializers import (
     RecipeSerializer,
     ShortRecipeSerializer,
     RecipeCreateSerializer,
-    SubscriptionSerializer
+    SubscriptionSerializer,
+    SubscriptionCreateSerializer
 )
 from .paginations import RecipePagination
 from .permissions import IsAuthorOrReadOnly
@@ -60,13 +61,9 @@ class UserViewSet(viewsets.ModelViewSet):
             data=request.data,
             partial=True
         )
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @avatar.mapping.delete
     def delete_avatar(self, request):
@@ -82,14 +79,10 @@ class UserViewSet(viewsets.ModelViewSet):
             data=request.data,
             context={'request': request},
         )
-        if serializer.is_valid(raise_exception=True):
-            user.set_password(serializer.data['new_password'])
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        serializer.is_valid(raise_exception=True)
+        user.set_password(serializer.data['new_password'])
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
@@ -103,25 +96,33 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk=None):
-        author = get_object_or_404(User, pk=pk)
         user = request.user
+        author = get_object_or_404(User, pk=pk)
 
-        if (user == author or Subscription.objects.filter(
-                user=user, author=author).exists()):
+        if (user.subscriptions.filter(author=author).exists()):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        subscription = Subscription.objects.create(user=user, author=author)
-        serializer = SubscriptionSerializer(
+        # Добавлен новый сериализатор для проверки на самоподписку
+        serializer = SubscriptionCreateSerializer(
+            data={'user': user.id, 'author': author.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        subscription = serializer.save()
+
+        output_serializer = SubscriptionSerializer(
             subscription.author, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, pk=None):
         user = request.user
         author = get_object_or_404(User, pk=pk)
+        sibscription = user.subscriptions.filter(author=author)
 
-        if Subscription.objects.filter(user=user, author=author).exists():
-            Subscription.objects.filter(user=user, author=author).delete()
+        if sibscription.exists():
+            sibscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -157,7 +158,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
-        if Favorite.objects.filter(user=user, recipe=recipe).exists():
+        if user.favorites.filter(recipe=recipe).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         Favorite.objects.create(user=user, recipe=recipe)
@@ -168,9 +169,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_favorite(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
+        favorite = user.favorites.filter(recipe=recipe)
 
-        if Favorite.objects.filter(user=user, recipe=recipe).exists():
-            Favorite.objects.filter(user=user, recipe=recipe).delete()
+        if favorite.exists():
+            favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -181,7 +183,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
 
-        if Cart.objects.filter(user=user, recipe=recipe).exists():
+        if user.cart.filter(recipe=recipe).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         Cart.objects.create(user=user, recipe=recipe)
@@ -192,9 +194,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_shopping_cart(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
+        cart = user.cart.filter(recipe=recipe)
 
-        if Cart.objects.filter(user=user, recipe=recipe).exists():
-            Cart.objects.filter(user=user, recipe=recipe).delete()
+        if cart.exists():
+            cart.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)

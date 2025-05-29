@@ -6,7 +6,7 @@
 
 1. **Клонируйте репозиторий:**
     ```bash
-    git clone https://github.com/your-username/foodgram-st.git
+    git clone https://github.com/AlexanderBultsev/foodgram-st.git
     cd foodgram-st
     ```
 
@@ -27,7 +27,7 @@
 
 3. **Постройте и запустите контейнеры:**
     ```bash
-    docker-compose up --build
+    docker-compose up --build -d
     ```
 
 4. **(Опционально) Создайте суперпользователя:**
